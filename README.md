@@ -17,10 +17,6 @@ This project was built to demonstrate core backend engineering principles, speci
 ## Local Setup & Installation
 
 1. **Clone the repository:**
-   ```bash
-   git clone [https://github.com/yourusername/StreakSankalp.git](https://github.com/yourusername/StreakSankalp.git)
-   cd StreakSankalp
-
 
 2. Create and activate a virtual environment:
 python -m venv venv
