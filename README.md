@@ -24,7 +24,7 @@ This project was built to demonstrate core backend engineering principles, speci
 
 2. Create and activate a virtual environment:
 python -m venv venv
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
+source venv/bin/activate
 
 3. Install dependencies:
 pip install Flask
