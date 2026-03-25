@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description"
+        content="StreakSankalp — A minimal habit tracker to build consistency and track your daily streaks." />
+    <title>StreakSankalp — Habit Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+
+    <style>
+        /* ============================================================= */
+        /*  DESIGN TOKENS                                                */
+        /* ============================================================= */
+        :root {
+            --bg-primary: #0b0e17;
+            --bg-secondary: #111827;
+            --bg-card: rgba(255, 255, 255, 0.04);
+            --bg-card-hover: rgba(255, 255, 255, 0.07);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-focus: rgba(139, 92, 246, 0.5);
+
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+
+            --accent-start: #8b5cf6;
+            --accent-end: #06b6d4;
+            --accent-mid: #6366f1;
+
+            --success: #34d399;
+            --danger: #f87171;
+            --warning: #fbbf24;
+
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --radius-full: 9999px;
+
+            --shadow-glow: 0 0 60px rgba(139, 92, 246, 0.12);
+            --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.25);
+
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ============================================================= */
+        /*  RESET & BASE                                                 */
+        /* ============================================================= */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* subtle grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 20% 20%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ============================================================= */
+        /*  LAYOUT                                                       */
+        /* ============================================================= */
+        .app-wrapper {
+            position: relative;
+            z-index: 1;
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+
+        /* ============================================================= */
+        /*  HEADER                                                       */
+        /* ============================================================= */
+        .header {
+            text-align: center;
+            margin-bottom: 56px;
+        }
+
+        .header__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent-start);
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            padding: 5px 14px;
+            border-radius: var(--radius-full);
+            margin-bottom: 20px;
+        }
+
+        .header__title {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header__subtitle {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+            max-width: 460px;
+            margin: 0 auto;
+        }
+
+        /* ============================================================= */
+        /*  GLASS CARD                                                   */
+        /* ============================================================= */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-card);
+            padding: 32px;
+            margin-bottom: 32px;
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+
+        .card:hover {
+            border-color: rgba(139, 92, 246, 0.15);
+        }
+
+        .card__heading {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card__heading .icon {
+            font-size: 1.2rem;
+        }
+
+        /* ============================================================= */
+        /*  FORMS                                                        */
+        /* ============================================================= */
+        .form-row {
+            display: flex;
+            gap: 12px;
+            align-items: stretch;
+        }
+
+        .form-row+.form-row {
+            margin-top: 14px;
+        }
+
+        .input {
+            flex: 1;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            font-size: 0.92rem;
+            font-family: inherit;
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+
+        .input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px 24px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            font-family: inherit;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: transform var(--transition), box-shadow var(--transition), opacity var(--transition);
+            white-space: nowrap;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn--primary {
+            background: linear-gradient(135deg, var(--accent-start), var(--accent-mid));
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn--primary:hover {
+            box-shadow: 0 6px 24px rgba(139, 92, 246, 0.45);
+        }
+
+        .btn--ghost {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn--ghost:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        /* ============================================================= */
+        /*  STATS BAR                                                    */
+        /* ============================================================= */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-tile {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px 24px;
+            text-align: center;
+            transition: border-color var(--transition), transform var(--transition);
+        }
+
+        .stat-tile:hover {
+            border-color: rgba(139, 92, 246, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .stat-tile__value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-tile__label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* ============================================================= */
+        /*  HABIT LIST                                                   */
+        /* ============================================================= */
+        .habit-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .habit-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 18px 24px;
+            transition: background var(--transition), border-color var(--transition), transform var(--transition);
+            animation: slideIn 0.35s ease-out both;
+        }
+
+        .habit-item:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(139, 92, 246, 0.15);
+            transform: translateX(4px);
+        }
+
+        /* staggered animation delay via JS inline style */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* circular progress ring */
+        .progress-ring {
+            flex-shrink: 0;
+            width: 52px;
+            height: 52px;
+        }
+
+        .progress-ring__bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.06);
+            stroke-width: 5;
+        }
+
+        .progress-ring__fill {
+            fill: none;
+            stroke-width: 5;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.6s ease;
+        }
+
+        .progress-ring__text {
+            font-size: 11px;
+            font-weight: 700;
+            fill: var(--text-primary);
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .habit-item__info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .habit-item__name {
+            font-weight: 600;
+            font-size: 0.98rem;
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .habit-item__meta {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+        }
+
+        .habit-item__actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .btn--log {
+            padding: 8px 16px;
+            font-size: 0.78rem;
+            border-radius: var(--radius-full);
+            background: rgba(52, 211, 153, 0.12);
+            color: var(--success);
+            border: 1px solid rgba(52, 211, 153, 0.2);
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: background var(--transition), transform var(--transition);
+        }
+
+        .btn--log:hover {
+            background: rgba(52, 211, 153, 0.22);
+            transform: scale(1.04);
+        }
+
+        .btn--log:active {
+            transform: scale(0.96);
+        }
+
+        /* ============================================================= */
+        /*  EMPTY STATE                                                  */
+        /* ============================================================= */
+        .empty-state {
+            text-align: center;
+            padding: 56px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state__icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state__text {
+            font-size: 0.95rem;
+            max-width: 300px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        /* ============================================================= */
+        /*  TOAST NOTIFICATION                                           */
+        /* ============================================================= */
+        .toast-container {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 20px;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastIn 0.35s ease-out, toastOut 0.3s ease-in 2.7s forwards;
+            max-width: 360px;
+        }
+
+        .toast--success {
+            border-left: 3px solid var(--success);
+        }
+
+        .toast--error {
+            border-left: 3px solid var(--danger);
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes toastOut {
+            to {
+                opacity: 0;
+                transform: translateY(8px) scale(0.95);
+            }
+        }
+
+        /* ============================================================= */
+        /*  LOG MODAL                                                    */
+        /* ============================================================= */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: var(--shadow-glow), var(--shadow-card);
+            transform: translateY(20px) scale(0.96);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal__title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .modal__actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        /* ============================================================= */
+        /*  RESPONSIVE                                                   */
+        /* ============================================================= */
+        @media (max-width: 600px) {
+            .app-wrapper {
+                padding: 32px 16px 60px;
+            }
+
+            .card {
+                padding: 24px 18px;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
+
+            .habit-item {
+                flex-wrap: wrap;
+                gap: 12px;
+                padding: 16px;
+            }
+
+            .habit-item__actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .stats-bar {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-wrapper">
+
+        <!-- ======== HEADER ======== -->
+        <header class="header">
+            <div class="header__badge">🔥 StreakSankalp</div>
+            <h1 class="header__title">Track Your Habits</h1>
+            <p class="header__subtitle">Build consistency, one day at a time. Log your habits and watch your streaks
+                grow.</p>
+        </header>
+
+        <!-- ======== STATS ======== -->
+        <div class="stats-bar" id="stats-bar">
+            <div class="stat-tile">
+                <div class="stat-tile__value" id="stat-total">—</div>
+                <div class="stat-tile__label">Habits</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-tile__value" id="stat-avg">—</div>
+                <div class="stat-tile__label">Avg Completion</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-tile__value" id="stat-best">—</div>
+                <div class="stat-tile__label">Best Streak</div>
+            </div>
+        </div>
+
+        <!-- ======== ADD HABIT FORM ======== -->
+        <section class="card" id="add-habit-card">
+            <h2 class="card__heading"><span class="icon">✦</span> New Habit</h2>
+            <form id="add-habit-form" class="form-row">
+                <input type="text" id="habit-name-input" class="input" placeholder="e.g. Meditate for 10 minutes"
+                    required autocomplete="off" />
+                <button type="submit" class="btn btn--primary" id="add-habit-btn">
+                    + Add Habit
+                </button>
+            </form>
+        </section>
+
+        <!-- ======== HABIT LIST ======== -->
+        <section class="card">
+            <h2 class="card__heading"><span class="icon">📋</span> Your Habits</h2>
+            <ul class="habit-list" id="habit-list">
+                <!-- populated by JS -->
+            </ul>
+            <div class="empty-state" id="empty-state" style="display: none;">
+                <div class="empty-state__icon">🌱</div>
+                <p class="empty-state__text">No habits yet. Add your first habit above and start building your streak!
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <!-- ======== LOG MODAL ======== -->
+    <div class="modal-overlay" id="log-modal">
+        <div class="modal">
+            <h3 class="modal__title" id="modal-title">Log Completion</h3>
+            <form id="log-form">
+                <label for="log-date-input"
+                    style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:8px; display:block;">
+                    Select date
+                </label>
+                <input type="date" id="log-date-input" class="input" required style="width:100%;" />
+                <input type="hidden" id="log-habit-id" />
+                <div class="modal__actions">
+                    <button type="button" class="btn btn--ghost" id="modal-cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn--primary" id="modal-log-btn">✓ Log</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======== TOAST CONTAINER ======== -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- ============================================================= -->
+    <!--  JAVASCRIPT                                                    -->
+    <!-- ============================================================= -->
+    <script>
+        (() => {
+            "use strict";
+
+            // ─── API HELPERS ──────────────────────────────────────────────
+            const API = "/api";
+
+            /**
+             * Generic fetch wrapper — returns parsed JSON or throws.
+             */
+            async function apiFetch(path, options = {}) {
+                const res = await fetch(`${API}${path}`, {
+                    headers: { "Content-Type": "application/json" },
+                    ...options,
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || "Something went wrong");
+                return data;
+            }
+
+            // ─── DOM REFS ────────────────────────────────────────────────
+            const habitList = document.getElementById("habit-list");
+            const emptyState = document.getElementById("empty-state");
+            const addHabitForm = document.getElementById("add-habit-form");
+            const habitNameInput = document.getElementById("habit-name-input");
+            const addHabitBtn = document.getElementById("add-habit-btn");
+            const statTotal = document.getElementById("stat-total");
+            const statAvg = document.getElementById("stat-avg");
+            const statBest = document.getElementById("stat-best");
+
+            // modal
+            const logModal = document.getElementById("log-modal");
+            const logForm = document.getElementById("log-form");
+            const logDateInput = document.getElementById("log-date-input");
+            const logHabitIdInput = document.getElementById("log-habit-id");
+            const modalTitle = document.getElementById("modal-title");
+            const modalCancelBtn = document.getElementById("modal-cancel-btn");
+
+            // toast
+            const toastContainer = document.getElementById("toast-container");
+
+            // ─── TOAST NOTIFICATIONS ─────────────────────────────────────
+            function showToast(message, type = "success") {
+                const toast = document.createElement("div");
+                toast.className = `toast toast--${type}`;
+                toast.innerHTML = `<span>${type === "success" ? "✓" : "✗"}</span><span>${message}</span>`;
+                toastContainer.appendChild(toast);
+                setTimeout(() => toast.remove(), 3200);
+            }
+
+            // ─── PROGRESS RING SVG BUILDER ───────────────────────────────
+            function buildProgressRing(pct) {
+                const clamped = Math.min(Math.max(pct, 0), 100);
+                const r = 20;
+                const c = 2 * Math.PI * r;                 // circumference
+                const offset = c - (clamped / 100) * c;    // dashoffset
+
+                // colour shifts green → yellow → red
+                let color;
+                if (clamped >= 70) color = "var(--success)";
+                else if (clamped >= 40) color = "var(--warning)";
+                else color = "var(--danger)";
+
+                return `
+                <svg class="progress-ring" viewBox="0 0 52 52">
+                    <circle class="progress-ring__bg" cx="26" cy="26" r="${r}" />
+                    <circle class="progress-ring__fill"
+                        cx="26" cy="26" r="${r}"
+                        stroke="${color}"
+                        stroke-dasharray="${c}"
+                        stroke-dashoffset="${offset}"
+                        transform="rotate(-90 26 26)" />
+                    <text class="progress-ring__text" x="26" y="26">${Math.round(clamped)}%</text>
+                </svg>`;
+            }
+
+            // ─── RENDER HABITS ──────────────────────────────────────────
+            function renderHabits(habits) {
+                habitList.innerHTML = "";
+
+                if (habits.length === 0) {
+                    emptyState.style.display = "block";
+                    statTotal.textContent = "0";
+                    statAvg.textContent = "—";
+                    statBest.textContent = "—";
+                    return;
+                }
+
+                emptyState.style.display = "none";
+
+                // stats
+                statTotal.textContent = habits.length;
+                const avg = habits.reduce((s, h) => s + h.completion_pct, 0) / habits.length;
+                statAvg.textContent = avg.toFixed(1) + "%";
+                const best = Math.max(...habits.map(h => h.completion_pct));
+                statBest.textContent = best.toFixed(1) + "%";
+
+                habits.forEach((habit, i) => {
+                    const li = document.createElement("li");
+                    li.className = "habit-item";
+                    li.style.animationDelay = `${i * 0.06}s`;
+
+                    const createdDate = new Date(habit.created_at + "Z");
+                    const dateStr = createdDate.toLocaleDateString("en-IN", {
+                        day: "numeric", month: "short", year: "numeric",
+                    });
+
+                    li.innerHTML = `
+                    ${buildProgressRing(habit.completion_pct)}
+                    <div class="habit-item__info">
+                        <div class="habit-item__name">${escapeHtml(habit.name)}</div>
+                        <div class="habit-item__meta">Created ${dateStr}</div>
+                    </div>
+                    <div class="habit-item__actions">
+                        <button class="btn--log" data-id="${habit.id}" data-name="${escapeAttr(habit.name)}">
+                            ✓ Log Today
+                        </button>
+                    </div>`;
+                    habitList.appendChild(li);
+                });
+            }
+
+            // ─── FETCH & REFRESH ────────────────────────────────────────
+            async function refreshHabits() {
+                try {
+                    const { habits } = await apiFetch("/habits");
+                    renderHabits(habits);
+                } catch (err) {
+                    showToast(err.message, "error");
+                }
+            }
+
+            // ─── ADD HABIT ──────────────────────────────────────────────
+            addHabitForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const name = habitNameInput.value.trim();
+                if (!name) return;
+
+                addHabitBtn.disabled = true;
+                addHabitBtn.textContent = "Adding…";
+
+                try {
+                    await apiFetch("/habits", {
+                        method: "POST",
+                        body: JSON.stringify({ name }),
+                    });
+                    habitNameInput.value = "";
+                    showToast(`"${name}" added!`);
+                    await refreshHabits();
+                } catch (err) {
+                    showToast(err.message, "error");
+                } finally {
+                    addHabitBtn.disabled = false;
+                    addHabitBtn.textContent = "+ Add Habit";
+                }
+            });
+
+            // ─── LOG MODAL (event delegation) ───────────────────────────
+            habitList.addEventListener("click", (e) => {
+                const btn = e.target.closest(".btn--log");
+                if (!btn) return;
+
+                const habitId = btn.dataset.id;
+                const habitName = btn.dataset.name;
+
+                logHabitIdInput.value = habitId;
+                modalTitle.textContent = `Log — ${habitName}`;
+                logDateInput.value = todayISO();
+                logModal.classList.add("active");
+            });
+
+            modalCancelBtn.addEventListener("click", () => logModal.classList.remove("active"));
+            logModal.addEventListener("click", (e) => {
+                if (e.target === logModal) logModal.classList.remove("active");
+            });
+
+            logForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const habitId = parseInt(logHabitIdInput.value, 10);
+                const date = logDateInput.value;
+
+                try {
+                    await apiFetch("/logs", {
+                        method: "POST",
+                        body: JSON.stringify({ habit_id: habitId, date }),
+                    });
+                    showToast("Completion logged!");
+                    logModal.classList.remove("active");
+                    await refreshHabits();
+                } catch (err) {
+                    showToast(err.message, "error");
+                }
+            });
+
+            // ─── UTILITIES ──────────────────────────────────────────────
+            function todayISO() {
+                const d = new Date();
+                return d.getFullYear() + "-" +
+                    String(d.getMonth() + 1).padStart(2, "0") + "-" +
+                    String(d.getDate()).padStart(2, "0");
+            }
+
+            function escapeHtml(str) {
+                const div = document.createElement("div");
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            function escapeAttr(str) {
+                return str.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+            }
+
+            // ─── BOOT ───────────────────────────────────────────────────
+            refreshHabits();
+        })();
+    </script>
+</body>
+
+</html>
