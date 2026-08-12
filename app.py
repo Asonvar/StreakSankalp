@@ -194,6 +194,9 @@ def log_completion():
             "message": "Habit logged successfully",
         }), 201
 
+    except ValueError as e:
+        return error_response(str(e), 400)
+
     except sqlite3.IntegrityError as e:
         err_msg = str(e).lower()
         if "foreign key" in err_msg:

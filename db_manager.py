@@ -140,12 +140,48 @@ class DatabaseManager:
 
         Raises
         ------
+        ValueError
+            If *log_date* is not a valid ``YYYY-MM-DD`` string, falls in
+            the future, or precedes the habit's ``created_at`` date.
         sqlite3.IntegrityError
             If a log for this habit + date combination already exists,
             or if *habit_id* does not reference a valid habit.
         """
         if log_date is None:
             log_date = date.today().isoformat()
+        else:
+            # --- Validate the caller-supplied date ---------------------- #
+
+            # 1. Must be a valid ISO-8601 date (YYYY-MM-DD).
+            try:
+                parsed_date = date.fromisoformat(log_date)
+            except (ValueError, TypeError):
+                raise ValueError(
+                    f"Invalid date format: '{log_date}'. "
+                    "Expected ISO-8601 (YYYY-MM-DD)."
+                )
+
+            # 2. Must not be in the future.
+            if parsed_date > date.today():
+                raise ValueError(
+                    f"log_date '{log_date}' is in the future. "
+                    "Cannot log a habit for a date that has not occurred yet."
+                )
+
+            # 3. Must not precede the habit's creation date.
+            row = self.conn.execute(
+                "SELECT created_at FROM habits WHERE id = ?",
+                (habit_id,),
+            ).fetchone()
+
+            if row is not None:
+                created_at = datetime.fromisoformat(row["created_at"]).date()
+                if parsed_date < created_at:
+                    raise ValueError(
+                        f"log_date '{log_date}' is before the habit's "
+                        f"creation date ({created_at.isoformat()}). "
+                        "Cannot log a habit for a date before it existed."
+                    )
 
         cursor = self.conn.execute(
             "INSERT INTO logs (habit_id, log_date, status) VALUES (?, ?, ?)",
