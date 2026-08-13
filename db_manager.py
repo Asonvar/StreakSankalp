@@ -10,7 +10,7 @@ No ORM is used; every query is raw SQL executed via the stdlib `sqlite3` module.
 """
 
 import sqlite3
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Optional
 
 
@@ -247,6 +247,83 @@ class DatabaseManager:
 
         # 3. Compute and return the percentage.
         return round((done_days / total_days) * 100, 2)
+
+    def get_streaks(self, habit_id: int) -> dict:
+        """
+        Compute the current and best consecutive-day streaks for a habit.
+
+        Algorithm
+        ---------
+        1. Fetch every distinct ``log_date`` where ``status = 'done'``,
+           sorted chronologically.
+        2. Walk the sorted list, tracking runs of consecutive calendar
+           days.  The longest run is the **best streak**.
+        3. The **current streak** uses a one-day grace period:
+
+           * Most recent ``done`` is **today** → count backward from today.
+           * Most recent ``done`` is **yesterday** → treat as still active
+             (the user may not have logged today yet).
+           * Most recent ``done`` is **2 + days ago** → streak is broken
+             (``current_streak = 0``).
+
+        Parameters
+        ----------
+        habit_id : int
+            The habit whose streaks are requested.
+
+        Returns
+        -------
+        dict
+            ``{"current_streak": int, "best_streak": int}``.
+            Both values are ``0`` if the habit has no ``"done"`` logs.
+        """
+        cursor = self.conn.execute(
+            """
+            SELECT DISTINCT log_date
+              FROM logs
+             WHERE habit_id = ?
+               AND status   = 'done'
+             ORDER BY log_date ASC
+            """,
+            (habit_id,),
+        )
+        dates = [date.fromisoformat(row["log_date"]) for row in cursor]
+
+        if not dates:
+            return {"current_streak": 0, "best_streak": 0}
+
+        # --- Walk the sorted dates and track runs ---------------------- #
+        best_run = 1
+        current_run = 1
+        last_run_length = 1          # length of the final (most-recent) run
+        last_run_end = dates[0]      # end-date of the final run
+
+        one_day = timedelta(days=1)
+
+        for i in range(1, len(dates)):
+            if dates[i] - dates[i - 1] == one_day:
+                current_run += 1
+            else:
+                best_run = max(best_run, current_run)
+                current_run = 1
+
+            # Always update — after the loop, these reflect the last run.
+            last_run_length = current_run
+            last_run_end = dates[i]
+
+        best_run = max(best_run, current_run)
+
+        # --- Current streak with one-day grace period ------------------ #
+        today = date.today()
+        days_since_last = (today - last_run_end).days
+
+        if days_since_last <= 1:
+            # Last run ends today or yesterday → still active.
+            current_streak = last_run_length
+        else:
+            current_streak = 0
+
+        return {"current_streak": current_streak, "best_streak": best_run}
 
     # ------------------------------------------------------------------ #
     #  Cleanup

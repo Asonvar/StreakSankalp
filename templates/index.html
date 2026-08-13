@@ -734,8 +734,8 @@
                 statTotal.textContent = habits.length;
                 const avg = habits.reduce((s, h) => s + h.completion_pct, 0) / habits.length;
                 statAvg.textContent = avg.toFixed(1) + "%";
-                const best = Math.max(...habits.map(h => h.completion_pct));
-                statBest.textContent = best.toFixed(1) + "%";
+                const best = Math.max(...habits.map(h => h.best_streak));
+                statBest.textContent = best + (best === 1 ? " day" : " days");
 
                 habits.forEach((habit, i) => {
                     const li = document.createElement("li");
@@ -751,7 +751,7 @@
                     ${buildProgressRing(habit.completion_pct)}
                     <div class="habit-item__info">
                         <div class="habit-item__name">${escapeHtml(habit.name)}</div>
-                        <div class="habit-item__meta">Created ${dateStr}</div>
+                        <div class="habit-item__meta">Created ${dateStr}${habit.current_streak > 0 ? ` · 🔥 ${habit.current_streak}-day streak` : ''}</div>
                     </div>
                     <div class="habit-item__actions">
                         <button class="btn--log" data-id="${habit.id}" data-name="${escapeAttr(habit.name)}">

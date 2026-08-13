@@ -76,7 +76,8 @@ def index():
 @app.route("/api/habits", methods=["GET"])
 def list_habits():
     """
-    Fetch every habit and attach its current completion percentage.
+    Fetch every habit and attach its current completion percentage
+    and streak data.
 
     Response (200)
     --------------
@@ -86,7 +87,9 @@ def list_habits():
                 "id": 1,
                 "name": "Meditate 10 min",
                 "created_at": "2026-03-25 06:30:00",
-                "completion_pct": 75.0
+                "completion_pct": 75.0,
+                "current_streak": 3,
+                "best_streak": 7
             },
             ...
         ]
@@ -96,9 +99,12 @@ def list_habits():
         db = get_db()
         habits = db.get_all_habits()
 
-        # Enrich each habit dict with its completion percentage.
+        # Enrich each habit dict with its completion percentage and streaks.
         for habit in habits:
             habit["completion_pct"] = db.get_completion_percentage(habit["id"])
+            streaks = db.get_streaks(habit["id"])
+            habit["current_streak"] = streaks["current_streak"]
+            habit["best_streak"] = streaks["best_streak"]
 
         return jsonify({"habits": habits}), 200
 
