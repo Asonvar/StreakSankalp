@@ -290,7 +290,7 @@ class DatabaseManager:
         dates = [date.fromisoformat(row["log_date"]) for row in cursor]
 
         if not dates:
-            return {"current_streak": 0, "best_streak": 0}
+            return {"current_streak": 0, "best_streak": 0, "logged_today": False}
 
         # --- Walk the sorted dates and track runs ---------------------- #
         best_run = 1
@@ -323,7 +323,11 @@ class DatabaseManager:
         else:
             current_streak = 0
 
-        return {"current_streak": current_streak, "best_streak": best_run}
+        return {
+            "current_streak": current_streak,
+            "best_streak": best_run,
+            "logged_today": date.today() in dates,
+        }
 
     # ------------------------------------------------------------------ #
     #  Cleanup

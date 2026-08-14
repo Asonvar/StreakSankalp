@@ -105,6 +105,7 @@ def list_habits():
             streaks = db.get_streaks(habit["id"])
             habit["current_streak"] = streaks["current_streak"]
             habit["best_streak"] = streaks["best_streak"]
+            habit["logged_today"] = streaks["logged_today"]
 
         return jsonify({"habits": habits}), 200
 
@@ -138,6 +139,8 @@ def create_habit():
     name = data.get("name", "").strip()
     if not name:
         return error_response("The 'name' field is required and cannot be empty.")
+    if len(name) > 100:
+        return error_response("Habit name must be 100 characters or fewer.")
 
     # --- Persist ---
     try:

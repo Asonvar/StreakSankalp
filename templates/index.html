@@ -7,6 +7,8 @@
     <meta name="description"
         content="StreakSankalp — A minimal habit tracker to build consistency and track your daily streaks." />
     <title>StreakSankalp — Habit Tracker</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🔥</text></svg>" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
@@ -399,6 +401,12 @@
             transform: scale(0.96);
         }
 
+        .btn--log-done {
+            opacity: 0.55;
+            cursor: default;
+            pointer-events: none;
+        }
+
         /* ============================================================= */
         /*  EMPTY STATE                                                  */
         /* ============================================================= */
@@ -594,7 +602,7 @@
             <h2 class="card__heading"><span class="icon">✦</span> New Habit</h2>
             <form id="add-habit-form" class="form-row">
                 <input type="text" id="habit-name-input" class="input" placeholder="e.g. Meditate for 10 minutes"
-                    required autocomplete="off" />
+                    required autocomplete="off" maxlength="100" />
                 <button type="submit" class="btn btn--primary" id="add-habit-btn">
                     + Add Habit
                 </button>
@@ -762,9 +770,10 @@
                         <div class="habit-item__meta">Created ${dateStr}${habit.current_streak > 0 ? ` · 🔥 ${habit.current_streak}-day streak` : ''}</div>
                     </div>
                     <div class="habit-item__actions">
-                        <button class="btn--log" data-id="${habit.id}" data-name="${escapeAttr(habit.name)}">
-                            ✓ Log Today
-                        </button>
+                        ${habit.logged_today
+                            ? `<button class="btn--log btn--log-done" disabled>✓ Logged</button>`
+                            : `<button class="btn--log" data-id="${habit.id}" data-name="${escapeAttr(habit.name)}">✓ Log Today</button>`
+                        }
                     </div>`;
                     habitList.appendChild(li);
                 });
