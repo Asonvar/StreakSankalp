@@ -405,8 +405,8 @@
 
         .btn--log-done {
             opacity: 0.55;
-            cursor: default;
-            pointer-events: none;
+            /* cursor: default;
+            pointer-events: none; */
         }
 
         /* ============================================================= */
@@ -831,10 +831,9 @@
                         <div class="habit-item__meta">Created ${dateStr}${habit.current_streak > 0 ? ` · 🔥 ${habit.current_streak}-day streak` : ''}</div>
                     </div>
                     <div class="habit-item__actions">
-                        ${habit.logged_today
-                            ? `<button class="btn--log btn--log-done" disabled>✓ Logged</button>`
-                            : `<button class="btn--log" data-id="${habit.id}" data-name="${escapeAttr(habit.name)}">✓ Log Today</button>`
-                        }
+                        <button class="btn--log${habit.logged_today ? ' btn--log-done' : ''}" data-id="${habit.id}" data-name="${escapeAttr(habit.name)}">
+                            ${habit.logged_today ? '✓ Logged' : '✓ Log Today'}
+                        </button>
                     </div>`;
                     habitList.appendChild(li);
                 });
