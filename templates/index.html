@@ -62,14 +62,16 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
+            background:
+                radial-gradient(circle at 50% 35%, rgba(8, 8, 12, 0.72), rgba(0, 0, 0, 0.93)),
+                url('/static/background.jpg') center center / cover no-repeat fixed;
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* subtle grid background */
+        /* subtle grid background
         body::before {
             content: '';
             position: fixed;
@@ -79,7 +81,7 @@
                 radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
             pointer-events: none;
             z-index: 0;
-        }
+        } */
 
         /* ============================================================= */
         /*  LAYOUT                                                       */
@@ -88,8 +90,14 @@
             position: relative;
             z-index: 1;
             max-width: 860px;
-            margin: 0 auto;
-            padding: 48px 24px 80px;
+            margin: 64px auto 80px;
+            padding: 48px 40px 64px;
+            background: rgba(9, 10, 15, 0.86);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 28px;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+            /* backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px); */
         }
 
         /* ============================================================= */
@@ -567,15 +575,74 @@
                 grid-template-columns: 1fr 1fr;
             }
         }
+
+        .brand-mark {
+            position: fixed;
+            top: 48px;
+            left: 48px;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 2.6rem;
+            line-height: 1;
+            color: var(--text-primary);
+            user-select: none;
+        }
+
+        .brand-mark__s {
+            color: #d97a3f;
+            font-size: 3.4rem;
+            line-height: 0.85;
+        }
+
+        .brand-mark__text {
+            font-weight: 400;
+            font-size: 1.9rem;
+            line-height: 1.15;
+        }
+
+        .made-by {
+            position: fixed;
+            top: 48px;
+            right: 48px;
+            z-index: 2;
+            text-align: right;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            user-select: none;
+        }
+
+        .made-by strong {
+            display: block;
+            color: var(--text-primary);
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+
+        @media (max-width: 1150px) {
+
+            .brand-mark,
+            .made-by {
+                display: none;
+            }
+        }
     </style>
 </head>
 
 <body>
+    <div class="brand-mark">
+        <span class="brand-mark__s">S</span>
+        <span class="brand-mark__text">treak<br>ankalp</span>
+    </div>
+    <div class="made-by">Made by<br><strong>ADITYA SONVAR</strong></div>
     <div class="app-wrapper">
 
         <!-- ======== HEADER ======== -->
         <header class="header">
-            <div class="header__badge">🔥 StreakSankalp</div>
             <h1 class="header__title">Track Your Habits</h1>
             <p class="header__subtitle">Build consistency, one day at a time. Log your habits and watch your streaks
                 grow.</p>
@@ -667,8 +734,8 @@
                 if (!contentType.includes("application/json")) {
                     throw new Error(
                         res.status === 404
-                        ? "Server not reachable — it may still be waking up. Try again in a few seconds."
-                        : `Unexpected server response (status ${res.status}). Please try again.`
+                            ? "Server not reachable — it may still be waking up. Try again in a few seconds."
+                            : `Unexpected server response (status ${res.status}). Please try again.`
                     );
                 }
                 const data = await res.json();
